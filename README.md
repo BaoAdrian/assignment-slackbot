@@ -1,7 +1,7 @@
 # Assignment Slack Bot
 This Slackbot is meant to help organize your weekly schedule with handy notifications for upcoming assignments/exams! 
 
-Supports the following commands:
+Supports the following commands: (WIP)
 - help
 - add
 - remove
@@ -25,7 +25,7 @@ $ source assignment-bot/bin/activate
 $ pip3 install slackclient
 ```
 
-Run the bot
+Run the bot (WIP)
 ```
 $ python3 assignment_bot.py
 ```
