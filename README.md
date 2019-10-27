@@ -1,5 +1,5 @@
 # Assignment Slack Bot
-This Slackbot is meant to help organize your weekly schedule with handy notifications for upcoming assignments/exams! 
+This is a simple Slackbot is meant to help organize your weekly schedule with handy notifications for upcoming assignments/exams!
 
 Supports the following commands: (WIP)
 - help
@@ -9,23 +9,25 @@ Supports the following commands: (WIP)
 - update
 
 # Getting Started
-First, you will need to install `python`
+If you wish to run/install this Slackbot, you will need to have installed `python` and optionally `virtualenv`
 ```
 $ brew install python3
-```
-
-Next, install virtualenv
-```
+$ brew install postgresql
 $ pip3 install virtualenv
 ```
 
-Activate virtualenv and install our project dependencies
+Next, close this repo and optionally enter activate the `virtualenv`
 ```
+$ virtualenv assignment-bot
 $ source assignment-bot/bin/activate
-$ pip3 install slackclient
+```
+
+Install python dependencies using `pip`
+```
+(assignment-bot) $ pip install -r requirements.txt
 ```
 
 Run the bot (WIP)
 ```
-$ python3 assignment_bot.py
+(assignment-bot) $ python3 assignment_bot.py
 ```
