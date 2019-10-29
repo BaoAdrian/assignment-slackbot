@@ -32,6 +32,26 @@ RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
 EXAMPLE_COMMAND = "`add [assignment] [due date]`"
 MENTION_REGEX = "^<@(|[WU].+?)>(.*)"
 
+acceptable_greetings = [
+    "hi",
+    "hello",
+    "hey",
+    "howdy",
+    "hi there",
+]
+
+greetings_quotes = [
+    "Greetings!",
+    "Hello human!",
+    "How may I be of assistance?",
+    "Howdy!",
+    "Hi there!",
+    "Oh good, I have someone to talk to now!",
+    "What assignments can I process for you today?",
+    "Sup?",
+    "I've been alone for so long! Don't leave!"
+]
+
 do_assignment_quotes = [
     "Get on it!",
     "Chop Chop!!",
@@ -67,7 +87,9 @@ def handle_command(command, channel):
     # Default response is help text for the user
     default_response = "Hmmm, I didn't quite catch that. Try one of these: \n{}".format(generate_help_menu())
     response = None
-    if command.startswith("help"):
+    if command in acceptable_greetings:
+        response = greetings_quotes[randint(0, len(greetings_quotes)-1)]
+    elif command.startswith("help"):
         # Display help menu
         response = generate_help_menu()
     elif command.startswith("list"): 
@@ -90,6 +112,10 @@ def handle_command(command, channel):
         parts = command.split(" ")
         assignment = ' '.join(parts[1:])
         response = complete_assignment(assignment)
+    elif command.startswith("update"):
+        pass
+    else:
+        response = invalid_quotes[randint(0, len(invalid_quotes)-1)]
 
     # Sends the response back to the channel
     slack_client.api_call(
@@ -106,7 +132,9 @@ $ [command] [assignment] [options]
 
 Commands:
 'help': Presents user with help menu
-'list': Lists all assignments 
+'list' or 'list-all': Lists all assignments 
+'list-completed': Lists all completed assignments
+'list-todo': Lists all pending assignments
 'add' : Adds an assignment to database, defaulting as incomplete
     > add Project 2 10/24
 'remove': Removes an assignment from database
