@@ -109,9 +109,11 @@ def handle_command(command, channel):
         # Add assignment to database
         response = add_assignment(command.split(" "))
     elif command.startswith("complete"):
-        parts = command.split(" ")
-        assignment = ' '.join(parts[1:])
+        assignment = ' '.join(command.split(" ")[1:])
         response = complete_assignment(assignment)
+    elif command.startswith("remove") or command.startswith("delete"):
+        assignment = ' '.join(command.split(" ")[1:])
+        response = remove_assignment(assignment)
     elif command.startswith("update"):
         pass
     else:
@@ -193,6 +195,17 @@ def complete_assignment(assignment):
     conn.commit()
     return "Marking `{}` as completed! Great Job!".format(assignment) 
 
+def remove_assignment(assignment):
+    psql = "SELECT * FROM assignments WHERE name='{}';".format(assignment)
+    cursor.execute(psql)
+    res = cursor.fetchall()
+    if len(res) == 0 :
+        return "Hmmm, couldn't find `{}`! Try another assignment.".format(assignment)
+    
+    psql = "DELETE FROM assignments WHERE name='{}';".format(assignment)
+    cursor.execute(psql)
+    conn.commit()
+    return "Successfully removed `{}` from you assignments!".format(assignment)
 
 if __name__ == "__main__":
     if slack_client.rtm_connect(with_team_state=False):
