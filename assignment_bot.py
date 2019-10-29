@@ -40,6 +40,16 @@ do_assignment_quotes = [
     "Plenty of time!"
 ]
 
+invalid_quotes = [
+    "Hmmm, I don't understand...",
+    "NOPE! CAN'T DO THAT!",
+    "According to my calculations, that input is invalid!",
+    "It appears you do not abide by the rules of THE BOT",
+    "Come again?",
+    "Nah...",
+    "That ain't it chief"
+]
+
 def parse_bot_commands(slack_events):
     for event in slack_events:
         if event["type"] == "message" and not "subtype" in event:
@@ -58,10 +68,23 @@ def handle_command(command, channel):
     default_response = "Hmmm, I didn't quite catch that. Try one of these: \n{}".format(generate_help_menu())
     response = None
     if command.startswith("help"):
+        # Display help menu
         response = generate_help_menu()
-    elif command.startswith("list"): # Display current assignments sorted by due date
-        response = get_assignment_list()
+    elif command.startswith("list"): 
+        command = '-'.join(command.split(" "))
+        if command == "list-all" or command == "list":
+            psql = "SELECT * FROM assignments ORDER BY due ASC;"
+            response = get_assignments(psql, "entered")
+        elif command == "list-completed":
+            psql = "SELECT * FROM assignments WHERE completed=TRUE ORDER BY due ASC;"
+            response = get_assignments(psql, "completed")
+        elif command == "list-todo" or command == "list-pending":
+            psql = "SELECT * FROM assignments WHERE completed=FALSE ORDER BY due ASC;"
+            response = get_assignments(psql, "pending")
+        else:
+            response = invalid_quotes[randint(0, len(invalid_quotes)-1)]
     elif command.startswith("add"):
+        # Add assignment to database
         response = add_assignment(command.split(" "))
     elif command.startswith("complete"):
         parts = command.split(" ")
@@ -98,13 +121,12 @@ due: Date when assignment is due in the format MM/DD (e.g. 09/28)
 ```
 """
 
-def get_assignment_list():
-    response = "Here is your list of assignments!\n```\n"
-    psql = """
-    SELECT * FROM assignments ORDER BY due ASC;
-    """
+def get_assignments(psql, tag):
+    response = "Here is your list of `{}` assignments!\n```\n".format(tag)
     cursor.execute(psql)
     res = cursor.fetchall()
+    if not res:
+        return "No `{}` assignments found!".format(tag)
     max_len = max([len(row[1]) for row in res])
     response += ".{}.{}.{}.\n".format("-"*(max_len+5), "-"*10, "-"*7)
     response += "|{}|{}|{}|\n".format("Name".center(max_len + 5), "Due Date".center(10), "Done?".center(7))
