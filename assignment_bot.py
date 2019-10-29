@@ -71,7 +71,7 @@ def handle_command(command, channel):
         # Display help menu
         response = generate_help_menu()
     elif command.startswith("list"): 
-        command = '-'.join(command.split(" "))
+        command = '-'.join(command.split(" ")) # format command
         if command == "list-all" or command == "list":
             psql = "SELECT * FROM assignments ORDER BY due ASC;"
             response = get_assignments(psql, "entered")
@@ -88,8 +88,8 @@ def handle_command(command, channel):
         response = add_assignment(command.split(" "))
     elif command.startswith("complete"):
         parts = command.split(" ")
-        assignment = parts[1]
-        response = "Marking `{}` as completed! Great Job!".format(assignment)
+        assignment = ' '.join(parts[1:])
+        response = complete_assignment(assignment)
 
     # Sends the response back to the channel
     slack_client.api_call(
@@ -133,7 +133,7 @@ def get_assignments(psql, tag):
     response += "|{}|{}|{}|\n".format("-"*(max_len+5), "-"*10, "-"*7)
     for row in res:
         date_str = "{}/{}".format(row[2].month, row[2].day)
-        response += "|{}|{}|{}|\n".format(str(" " + row[1]).ljust(max_len + 5), str(" " + date_str).ljust(10), "Yes" if row[3] else "".ljust(7))
+        response += "|{}|{}|{}|\n".format(str(" " + row[1]).ljust(max_len + 5), str(" " + date_str).ljust(10), "Yes".center(7) if row[3] else "".ljust(7))
     response += "'{}'{}'{}'\n".format("-"*(max_len+5), "-"*10, "-"*7)
     response += "```"
     return response
@@ -149,6 +149,22 @@ def add_assignment(parts):
     conn.commit()
     response = "Added `{}` with a due date of `{}`! {}".format(assignment, due_date_str, do_assignment_quotes[randint(0, len(do_assignment_quotes)-1)])
     return response
+
+def complete_assignment(assignment):
+    # First check to make sure assignment exists
+    psql = "SELECT * FROM assignments WHERE name='{}';".format(assignment)
+    cursor.execute(psql)
+    res = cursor.fetchall()
+    if len(res) == 0 :
+        return "Hmmm, couldn't find `{}`! Try another assignment.".format(assignment)
+    elif len(res) > 1:
+        return "Looks like you have multiple entries for `{}`. Please remove one!".format(assignment)
+    
+    psql = "UPDATE assignments SET completed=TRUE WHERE name='{}';".format(assignment)
+    cursor.execute(psql)
+    conn.commit()
+    return "Marking `{}` as completed! Great Job!".format(assignment) 
+
 
 if __name__ == "__main__":
     if slack_client.rtm_connect(with_team_state=False):
