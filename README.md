@@ -28,6 +28,14 @@ Install python dependencies using `pip`
 (bot) $ pip install -r requirements.txt
 ```
 
+Populate your OAuth Tokens & Postgres database configurations inside `secrets.json`
+   - See `templates/secrets.template.json` for the expected format/information (fill with your variables as you see fit)
+```
+$ mkdir secrets
+$ vim secrets/secrets.json
+<INSERT BOT SECRETS>
+```
+
 Run the bot (WIP)
 ```
 (assignment-bot) $ python3 assignment_bot.py
