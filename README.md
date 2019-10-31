@@ -40,11 +40,11 @@ Lists the help menu detailing the acceptable commands
 ## List
 Lists the given assignments, filtered by provided commmand:
 1. `list` OR `list-all`
-   - Lists ALL assignments, completed or not, in a formatted table
+   - Lists ALL assignments, _completed or not_, in a formatted table
 2. `list-completed`
-   - Only lists assignments marked/entered as completed
+   - Only lists assignments marked/entered as _completed_
 3. `list-todo`
-   - Only lists assignments that are still pending
+   - Only lists assignments that are still _pending_
 ```
 list
 list-all
@@ -75,7 +75,7 @@ remove Project 5 - The Traveling Salesman
 ```
 
 ## Complete
-Marks a given assignment as completed (updating the `completed` columm to TRUE)
+Marks a given assignment as completed (updating the `completed` columm to _TRUE_)
 ```
 complete [assignment]
 ```
