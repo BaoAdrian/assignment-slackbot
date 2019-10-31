@@ -35,8 +35,16 @@ Run the bot (WIP)
 
 # Supported Commands
 ## Help
+Lists the help menu detailing the acceptable commands
 
 ## List
+Lists the given assignments, filtered by provided commmand:
+1. `list` OR `list-all`
+   - Lists ALL assignments, completed or not, in a formatted table
+2. `list-completed`
+   - Only lists assignments marked/entered as completed
+3. `list-todo`
+   - Only lists assignments that are still pending
 ```
 list
 list-all
@@ -45,6 +53,7 @@ list-todo
 ```
 
 ## Add
+Adds a given assignment to the database with a corresponding due date
 ```
 add [assignment] [due-date]
 ```
@@ -55,6 +64,7 @@ add Project 5 - The Traveling Salesman 11/07
 ```
 
 ## Remove
+Removes an assignment from the database
 ```
 remove [assignment]
 ```
@@ -65,6 +75,7 @@ remove Project 5 - The Traveling Salesman
 ```
 
 ## Complete
+Marks a given assignment as completed (updating the `completed` columm to TRUE)
 ```
 complete [assignment]
 ```
@@ -75,4 +86,5 @@ complete Project 5 - The Traveling Salesman
 ```
 
 ## Update
+Updates a given assignment, updating a specific field for the corresponding assignment
 WIP
