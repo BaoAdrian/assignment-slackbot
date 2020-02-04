@@ -1,36 +1,6 @@
-import os
-import time
-import re
-import json
-import psycopg2
 from random import randint
-from slackclient import SlackClient
-
-# Read data from secrets directory
-data = {}
-with open("secrets/secrets.json", "r") as f:
-    data = json.load(f)
-
-# Connect to database
-try:
-    conn = psycopg2.connect(user=data["DB_USER"],
-                            password=data["DB_PASS"],
-                            host=data["DB_HOST"],
-                            port="5432",
-                            database=data["DB_NAME"])
-    cursor = conn.cursor()
-except (Exception, psycopg2.Error) as error:
-    print("Unanble to connect to database!")
-    exit(1)
-
-# instantiate Slack client
-slack_client = SlackClient(data["BOT_USER_ACCESS_TOKEN"])
-
-# bots's user ID in Slack: value is assigned after the bot starts up
-bot_id = None
-RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
-EXAMPLE_COMMAND = "`add [assignment] [due date]`"
-MENTION_REGEX = "^<@(|[WU].+?)>(.*)"
+import os, re, time, json, psycopg2
+import slack
 
 acceptable_greetings = [
     "hi",
@@ -70,20 +40,36 @@ invalid_quotes = [
     "That ain't it chief"
 ]
 
-def parse_bot_commands(slack_events):
-    for event in slack_events:
-        if event["type"] == "message" and not "subtype" in event:
-            user_id, message = parse_direct_mention(event["text"])
-            if user_id == bot_id:
-                return message, event["channel"]
-    return None, None
+# Read data from secrets directory
+data = {}
+with open("secrets/secrets.json", "r") as f:
+    data = json.load(f)
+
+# Connect to database
+try:
+    conn = psycopg2.connect(user=data["DB_USER"],
+                            password=data["DB_PASS"],
+                            host=data["DB_HOST"],
+                            port="5432",
+                            database=data["DB_NAME"])
+    cursor = conn.cursor()
+except (Exception, psycopg2.Error) as error:
+    print("Unanble to connect to database!")
+    exit(1)
 
 def parse_direct_mention(message_text):
+    """
+    Parses message_text String to extract channel and command strings
+
+    @param message_text String value input by user on Slack
+    @return (command, channel) tuple extracted from parameter text
+    """
+    MENTION_REGEX = "^<@(|[WU].+?)>(.*)"
     matches = re.search(MENTION_REGEX, message_text)
     # the first group contains the username, the second group contains the remaining message
     return (matches.group(1), matches.group(2).strip()) if matches else (None, None)
 
-def handle_command(command, channel):
+def handle_command(command):
     # Default response is help text for the user
     default_response = "Hmmm, I didn't quite catch that. Try one of these: \n{}".format(generate_help_menu())
     response = None
@@ -119,12 +105,7 @@ def handle_command(command, channel):
     else:
         response = invalid_quotes[randint(0, len(invalid_quotes)-1)]
 
-    # Sends the response back to the channel
-    slack_client.api_call(
-        "chat.postMessage",
-        channel=channel,
-        text=response or default_response
-    )
+    return response or default_response
 
 def generate_help_menu():
     return """
@@ -207,14 +188,25 @@ def remove_assignment(assignment):
     conn.commit()
     return "Successfully removed `{}` from you assignments!".format(assignment)
 
+@slack.RTMClient.run_on(event='message')
+def say_hello(**payload):
+    data = payload['data']
+    web_client = payload['web_client']
+
+    user_id, command = parse_direct_mention(data["text"])
+
+    # Authenticatae bot_id
+    bot_id = web_client.api_call("auth.test")["user_id"]
+    if bot_id == user_id:
+        response = handle_command(command)
+
+        # rtm_client = payload['rtm_client']
+        web_client.chat_postMessage(
+            channel=data["channel"],
+            text=response
+        )
+
 if __name__ == "__main__":
-    if slack_client.rtm_connect(with_team_state=False):
-        print("Assignment Bot is now running!")
-        bot_id = slack_client.api_call("auth.test")["user_id"]
-        while True:
-            command, channel = parse_bot_commands(slack_client.rtm_read())
-            if command:
-                handle_command(command, channel)
-            time.sleep(RTM_READ_DELAY)
-    else:
-        print("Connection failed. Exception traceback printed above.")
+    print("Starting Bot...")
+    rtm_client = slack.RTMClient(token=data["BOT_USER_ACCESS_TOKEN"])
+    rtm_client.start()
