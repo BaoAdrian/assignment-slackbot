@@ -1,2 +1,2 @@
-slackclient==1.3.2
-psycopg2
+slackclient==2.5.0
+psycopg2==2.8.4
